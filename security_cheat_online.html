@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>安全速查表工具 - 在线版</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            opacity: 0.9;
+        }
+        
+        .main-content {
+            padding: 30px;
+        }
+        
+        .search-section {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .search-box {
+            flex: 1;
+            padding: 12px 20px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        
+        .search-box:focus {
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+            outline: none;
+        }
+        
+        .btn {
+            padding: 12px 30px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        
+        .btn:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+        }
+        
+        .categories {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .category-btn {
+            padding: 8px 20px;
+            background: #ecf0f1;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .category-btn.active {
+            background: #3498db;
+            color: white;
+        }
+        
+        .commands-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .command-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            border: 1px solid #eee;
+            transition: all 0.3s;
+        }
+        
+        .command-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.12);
+        }
+        
+        .command-title {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .command-desc {
+            color: #7f8c8d;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+        
+        .command-code {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: 'Consolas', monospace;
+            font-size: 14px;
+            margin-bottom: 10px;
+            overflow-x: auto;
+        }
+        
+        .tags {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+        
+        .tag {
+            background: #e8f6f3;
+            color: #16a085;
+            padding: 4px 10px;
+            border-radius: 10px;
+            font-size: 12px;
+        }
+        
+        .add-command-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #2c3e50;
+            font-weight: bold;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #7f8c8d;
+            border-top: 1px solid #eee;
+        }
+        
+        .no-results {
+            text-align: center;
+            padding: 40px;
+            color: #7f8c8d;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔐 安全速查表工具</h1>
+            <p>收集和搜索常用安全测试命令</p>
+        </div>
+        
+        <div class="main-content">
+            <!-- 搜索区域 -->
+            <div class="search-section">
+                <input type="text" id="searchInput" class="search-box" placeholder="搜索命令或关键词..." onkeyup="searchCommands()">
+                <button class="btn" onclick="clearSearch()">🗑️ 清空</button>
+                <button class="btn btn-primary" onclick="showAddForm()">➕ 添加命令</button>
+            </div>
+            
+            <!-- 分类筛选 -->
+            <div class="categories">
+                <button class="category-btn active" onclick="filterByCategory('all')">所有命令</button>
+                <button class="category-btn" onclick="filterByCategory('web')">Web安全</button>
+                <button class="category-btn" onclick="filterByCategory('network')">网络安全</button>
+                <button class="category-btn" onclick="filterByCategory('system')">系统安全</button>
+            </div>
+            
+            <!-- 命令显示区域 -->
+            <div id="commandsContainer" class="commands-grid">
+                <!-- 命令卡片会动态显示在这里 -->
+            </div>
+            
+            <!-- 添加命令表单 -->
+            <div id="addCommandForm" class="add-command-section" style="display: none;">
+                <h2>添加新命令</h2>
+                <div class="form-group">
+                    <label>标题</label>
+                    <input type="text" id="titleInput" class="form-control" placeholder="例如：SQL注入检测">
+                </div>
+                <div class="form-group">
+                    <label>描述</label>
+                    <input type="text" id="descInput" class="form-control" placeholder="简要描述命令用途">
+                </div>
+                <div class="form-group">
+                    <label>命令</label>
+                    <textarea id="cmdInput" class="form-control" rows="3" placeholder="输入完整的命令..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>标签（用逗号分隔）</label>
+                    <input type="text" id="tagsInput" class="form-control" placeholder="例如：sql,web,安全">
+                </div>
+                <div class="form-group">
+                    <label>分类</label>
+                    <select id="categorySelect" class="form-control">
+                        <option value="web">Web安全</option>
+                        <option value="network">网络安全</option>
+                        <option value="system">系统安全</option>
+                        <option value="other">其他</option>
+                    </select>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn btn-primary" onclick="addCommand()">💾 保存命令</button>
+                    <button class="btn" onclick="hideAddForm()">❌ 取消</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>双击命令可查看详情 | 数据保存在浏览器本地</p>
+        </div>
+    </div>
+
+    <script>
+        // 示例数据
+        let commands = [
+            {
+                id: 1,
+                title: "SQL注入检测",
+                description: "使用sqlmap检测SQL注入漏洞",
+                command: "sqlmap -u 'http://test.com?id=1' --batch",
+                tags: ["sql", "web", "安全"],
+                category: "web"
+            },
+            {
+                id: 2,
+                title: "Nmap端口扫描",
+                description: "基本端口和服务版本检测",
+                command: "nmap -sV -sC target.com",
+                tags: ["网络", "扫描", "nmap"],
+                category: "network"
+            },
+            {
+                id: 3,
+                title: "Linux系统信息",
+                description: "查看系统基本信息",
+                command: "uname -a && cat /etc/os-release",
+                tags: ["系统", "linux", "信息"],
+                category: "system"
+            },
+            {
+                id: 4,
+                title: "XSS漏洞检测",
+                description: "检测跨站脚本攻击漏洞",
+                command: "xsser -u 'http://test.com' -c 1",
+                tags: ["xss", "web", "安全"],
+                category: "web"
+            },
+            {
+                id: 5,
+                title: "文件权限检查",
+                description: "检查敏感文件的权限设置",
+                command: "ls -la /etc/passwd /etc/shadow",
+                tags: ["权限", "linux", "安全"],
+                category: "system"
+            },
+            {
+                id: 6,
+                title: "网络连接查看",
+                description: "查看当前网络连接状态",
+                command: "netstat -tulpn",
+                tags: ["网络", "连接", "监控"],
+                category: "network"
+            }
+        ];
+
+        // 加载保存的数据
+        function loadData() {
+            const saved = localStorage.getItem('securityCommands');
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    if (Array.isArray(parsed)) {
+                        commands = parsed;
+                    }
+                } catch(e) {
+                    console.error('加载数据失败:', e);
+                }
+            }
+            displayCommands(commands);
+        }
+
+        // 保存数据
+        function saveData() {
+            localStorage.setItem('securityCommands', JSON.stringify(commands));
+        }
+
+        // 显示命令
+        function displayCommands(commandList) {
+            const container = document.getElementById('commandsContainer');
+            if (commandList.length === 0) {
+                container.innerHTML = '<div class="no-results"><h3>没有找到相关命令</h3><p>尝试其他关键词或添加新命令</p></div>';
+                return;
+            }
+            
+            container.innerHTML = commandList.map(cmd => `
+                <div class="command-card" data-id="${cmd.id}">
+                    <div class="command-title">${cmd.title}</div>
+                    <div class="command-desc">${cmd.description}</div>
+                    <div class="command-code" onclick="copyToClipboard('${cmd.id}')" title="点击复制命令">
+                        ${cmd.command}
+                    </div>
+                    <div class="tags">
+                        ${cmd.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+                        <span class="tag" style="background:#e8f4f8;color:#3498db;">
+                        ${getCategoryName(cmd.category)}
+                        </span>
+                    </div>
+                </div>
+            `).join('');
+            
+            // 添加点击事件
+            document.querySelectorAll('.command-card').forEach(card => {
+                card.addEventListener('dblclick', function() {
+                    const id = parseInt(this.dataset.id);
+                    const cmd = commands.find(c => c.id === id);
+                    if (cmd) {
+                        alert(`🔍 命令详情\n\n📋 标题: ${cmd.title}\n📖 描述: ${cmd.description}\n💻 命令: ${cmd.command}\n🏷️ 标签: ${cmd.tags.join(', ')}\n📁 分类: ${getCategoryName(cmd.category)}`);
+                    }
+                });
+            });
+        }
+
+        // 获取分类名称
+        function getCategoryName(category) {
+            const categories = {
+                'web': 'Web安全',
+                'network': '网络安全',
+                'system': '系统安全',
+                'other': '其他'
+            };
+            return categories[category] || category;
+        }
+
+        // 搜索命令
+        function searchCommands() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const categoryButtons = document.querySelectorAll('.category-btn');
+            let activeCategory = 'all';
+            
+            categoryButtons.forEach(btn => {
+                if (btn.classList.contains('active')) {
+                    if (btn.textContent.includes('Web')) activeCategory = 'web';
+                    else if (btn.textContent.includes('网络')) activeCategory = 'network';
+                    else if (btn.textContent.includes('系统')) activeCategory = 'system';
+                    else activeCategory = 'all';
+                }
+            });
+            
+            const filtered = commands.filter(cmd => {
+                const matchesSearch = !searchTerm || 
+                    cmd.title.toLowerCase().includes(searchTerm) ||
+                    cmd.description.toLowerCase().includes(searchTerm) ||
+                    cmd.command.toLowerCase().includes(searchTerm) ||
+                    cmd.tags.some(tag => tag.toLowerCase().includes(searchTerm));
+                
+                const matchesCategory = activeCategory === 'all' || cmd.category === activeCategory;
+                
+                return matchesSearch && matchesCategory;
+            });
+            
+            displayCommands(filtered);
+        }
+
+        // 按分类筛选
+        function filterByCategory(category) {
+            // 更新按钮状态
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            searchCommands(); // 重新搜索
+        }
+
+        // 清空搜索
+        function clearSearch() {
+            document.getElementById('searchInput').value = '';
+            searchCommands();
+        }
+
+        // 复制到剪贴板
+        function copyToClipboard(id) {
+            const cmd = commands.find(c => c.id === id);
+            if (cmd) {
+                navigator.clipboard.writeText(cmd.command)
+                    .then(() => {
+                        alert('命令已复制到剪贴板！');
+                    })
+                    .catch(err => {
+                        console.error('复制失败:', err);
+                    });
+            }
+        }
+
+        // 显示添加表单
+        function showAddForm() {
+            document.getElementById('addCommandForm').style.display = 'block';
+        }
+
+        // 隐藏添加表单
+        function hideAddForm() {
+            document.getElementById('addCommandForm').style.display = 'none';
+            // 清空表单
+            document.getElementById('titleInput').value = '';
+            document.getElementById('descInput').value = '';
+            document.getElementById('cmdInput').value = '';
+            document.getElementById('tagsInput').value = '';
+        }
+
+        // 添加新命令
+        function addCommand() {
+            const title = document.getElementById('titleInput').value.trim();
+            const description = document.getElementById('descInput').value.trim();
+            const command = document.getElementById('cmdInput').value.trim();
+            const tags = document.getElementById('tagsInput').value.split(',').map(tag => tag.trim()).filter(tag => tag);
+            const category = document.getElementById('categorySelect').value;
+            
+            if (!title || !command) {
+                alert('请填写标题和命令！');
+                return;
+            }
+            
+            const newCommand = {
+                id: Date.now(), // 使用时间戳作为ID
+                title,
+                description,
+                command,
+                tags,
+                category
+            };
+            
+            commands.unshift(newCommand); // 添加到开头
+            saveData();
+            displayCommands(commands);
+            hideAddForm();
+            
+            alert('命令添加成功！');
+        }
+
+        // 初始化页面
+        document.addEventListener('DOMContentLoaded', function() {
+            loadData();
+        });
+    </script>
+</body>
+</html>
